@@ -1,0 +1,6 @@
+parameters:
+    level: 9
+    paths:
+        - src
+    ignoreErrors:
+        - '#Parameter \#1 \$data of method MiBo\\Countries\\ISO\\CountryProvider\:\:createCountry\(\) expects array\{[a-zA-Z0-9\-\,\s\<\>\:]+\}, array\<string\, mixed\> given\.#'
