@@ -8,7 +8,11 @@
         "Countries",
         "Country",
         "Codes",
-        "Standard"
+        "Standard",
+        "ISO",
+        "3166-1",
+        "3166",
+        "Country codes"
     ],
     "authors": [
         {
