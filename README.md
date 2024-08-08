@@ -29,5 +29,5 @@ echo $country->getName(); // Slovakia
 echo $country->getAlpha2(); // SK
 echo $country->getAlpha3(); // SVK
 echo $country->getNumericalCode(); // 703
-echo $country->getCurrencies()[0]->getAlphabeticalCode(); // EUR
+echo $country->getCurrencies()[0]; // EUR
 ```

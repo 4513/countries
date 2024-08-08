@@ -7,11 +7,14 @@ namespace MiBo\Countries\Tests;
 use League\ISO3166\ISO3166;
 use MiBo\Countries\Contracts\CountryInterface;
 use MiBo\Countries\Contracts\CountryProviderInterface;
+use MiBo\Countries\Exceptions\CountryNotFoundException;
+use MiBo\Countries\Exceptions\InvalidSearchedValueException;
+use MiBo\Countries\ISO\Country;
 use MiBo\Countries\ISO\CountryProvider;
-use MiBo\Currencies\ISO\ISOArrayListLoader;
-use MiBo\Currencies\ISO\ISOCurrencyProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Small;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 /**
  * Class CountryTest
@@ -23,37 +26,15 @@ use Psr\Log\NullLogger;
  * @since 0.1
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise.
- *
- * @coversDefaultClass \MiBo\Countries\ISO\Country
  */
+#[CoversClass(Country::class)]
+#[CoversClass(CountryProvider::class)]
+#[CoversClass(CountryNotFoundException::class)]
+#[CoversClass(InvalidSearchedValueException::class)]
+#[Small]
 final class CountryTest extends TestCase
 {
-    /**
-     * @small
-     *
-     * @covers ::__construct
-     * @covers ::getName
-     * @covers ::getAlpha2
-     * @covers ::getAlpha3
-     * @covers ::getNumericalCode
-     * @covers ::getCurrencies
-     * @covers ::is
-     * @covers ::__toString
-     * @covers \MiBo\Countries\ISO\CountryProvider::__construct
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByName
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByAlpha2
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByAlpha3
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByNumericalCode
-     * @covers \MiBo\Countries\ISO\CountryProvider::createCountry
-     *
-     * @param non-empty-string $alpha3
-     * @param non-empty-string $alpha2
-     * @param numeric-string $numerical
-     *
-     * @return void
-     *
-     * @dataProvider getData
-     */
+    #[DataProvider('getData')]
     public function testCountry(string $alpha3, string $alpha2, string $numerical): void
     {
         $provider = self::getProvider();
@@ -74,32 +55,44 @@ final class CountryTest extends TestCase
         self::assertTrue($country1->is($provider->getByName($country1->getName())));
     }
 
-    /**
-     * @small
-     *
-     * @covers \MiBo\Countries\ISO\CountryProvider::__construct
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByName
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByAlpha2
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByAlpha3
-     * @covers \MiBo\Countries\ISO\CountryProvider::getByNumericalCode
-     *
-     * @param non-empty-string $alpha3
-     * @param non-empty-string $alpha2
-     * @param numeric-string $numerical
-     * @param string $name
-     *
-     * @return void
-     *
-     * @dataProvider getInvalidData
-     */
-    public function testInvalidCountry(string $alpha3, string $alpha2, string $numerical, string $name): void
+    #[DataProvider('getInvalidAlpha2')]
+    public function testInvalidAlpha2(string $expectedThrowable, string $value): void
     {
         $provider = self::getProvider();
 
-        self::assertNull($provider->getByAlpha3($alpha3));
-        self::assertNull($provider->getByAlpha2($alpha2));
-        self::assertNull($provider->getByNumericalCode($numerical));
-        self::assertNull($provider->getByName($name));
+        self::expectException($expectedThrowable);
+
+        $provider->getByAlpha2($value);
+    }
+
+    #[DataProvider('getInvalidAlpha3')]
+    public function testInvalidAlpha3(string $expectedThrowable, string $value): void
+    {
+        $provider = self::getProvider();
+
+        self::expectException($expectedThrowable);
+
+        $provider->getByAlpha3($value);
+    }
+
+    #[DataProvider('getInvalidNumeric')]
+    public function testInvalidNumeric(string $expectedThrowable, string $value): void
+    {
+        $provider = self::getProvider();
+
+        self::expectException($expectedThrowable);
+
+        $provider->getByNumericalCode($value);
+    }
+
+    #[DataProvider('getInvalidName')]
+    public function testInvalidName(string $expectedThrowable, string $value): void
+    {
+        $provider = self::getProvider();
+
+        self::expectException($expectedThrowable);
+
+        $provider->getByName($value);
     }
 
     /**
@@ -129,23 +122,133 @@ final class CountryTest extends TestCase
     /**
      * @return array<array<string>>
      */
-    public static function getInvalidData(): array
+    public static function getInvalidAlpha2(): array
     {
         return [
-            [
-                'SSS',
-                'ZZ',
-                '000',
-                'ARandomString',
+            'lowercase' => [
+                InvalidSearchedValueException::class,
+                'cz',
+            ],
+            'mixedcase' => [
+                InvalidSearchedValueException::class,
+                'cZ',
+            ],
+            'not an alpha2' => [
+                InvalidSearchedValueException::class,
+                'CZ1',
+            ],
+            'not two letters' => [
+                InvalidSearchedValueException::class,
+                'C',
+            ],
+            'empty' => [
+                InvalidSearchedValueException::class,
+                '',
+            ],
+            'not alpha' => [
+                InvalidSearchedValueException::class,
+                '12',
+            ],
+            'longer' => [
+                InvalidSearchedValueException::class,
+                'CZE',
+            ],
+            'not found' => [
+                CountryNotFoundException::class,
+                'XX',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<array<string>>
+     */
+    public static function getInvalidAlpha3(): array
+    {
+        return [
+            'lowercase' => [
+                InvalidSearchedValueException::class,
+                'svk',
+            ],
+            'mixedcase' => [
+                InvalidSearchedValueException::class,
+                'sVk',
+            ],
+            'not an alpha3' => [
+                InvalidSearchedValueException::class,
+                'SK',
+            ],
+            'not three letters' => [
+                InvalidSearchedValueException::class,
+                'SV',
+            ],
+            'empty' => [
+                InvalidSearchedValueException::class,
+                '',
+            ],
+            'not alpha' => [
+                InvalidSearchedValueException::class,
+                '123',
+            ],
+            'longer' => [
+                InvalidSearchedValueException::class,
+                'SVKA',
+            ],
+            'not found' => [
+                CountryNotFoundException::class,
+                'XXX',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<array<string>>
+     */
+    public static function getInvalidNumeric(): array
+    {
+        return [
+            'not a number' => [
+                InvalidSearchedValueException::class,
+                '123a',
+            ],
+            'empty' => [
+                InvalidSearchedValueException::class,
+                '',
+            ],
+            'not numeric' => [
+                InvalidSearchedValueException::class,
+                'SVK',
+            ],
+            'longer' => [
+                InvalidSearchedValueException::class,
+                '12345',
+            ],
+            'not found' => [
+                CountryNotFoundException::class,
+                '999',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<array<string>>
+     */
+    public static function getInvalidName(): array
+    {
+        return [
+            'empty' => [
+                InvalidSearchedValueException::class,
+                '',
+            ],
+            'not found' => [
+                CountryNotFoundException::class,
+                'Slovak Republic',
             ],
         ];
     }
 
     public static function getProvider(): CountryProviderInterface
     {
-        return new CountryProvider(
-            new ISO3166(),
-            new ISOCurrencyProvider(new ISOArrayListLoader(), new NullLogger())
-        );
+        return new CountryProvider(new ISO3166());
     }
 }

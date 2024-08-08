@@ -31,7 +31,7 @@ final class Country implements CountryInterface
     /** @var numeric-string */
     private string $numericalCode;
 
-    /** @var array<\MiBo\Currencies\CurrencyInterface> */
+    /** @var array<non-empty-string> */
     private array $currencies;
 
     /**
@@ -39,7 +39,7 @@ final class Country implements CountryInterface
      * @param non-empty-string $alpha2
      * @param non-empty-string $alpha3
      * @param numeric-string $numericalCode
-     * @param array<\MiBo\Currencies\CurrencyInterface> $currencies
+     * @param array<non-empty-string> $currencies
      */
     public function __construct(string $name, string $alpha2, string $alpha3, string $numericalCode, array $currencies)
     {

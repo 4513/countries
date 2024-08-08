@@ -52,7 +52,7 @@ interface CountryInterface extends Stringable
     /**
      * Currency list used within the country.
      *
-     * @return array<\MiBo\Currencies\CurrencyInterface>
+     * @return array<non-empty-string>
      */
     public function getCurrencies(): array;
 
